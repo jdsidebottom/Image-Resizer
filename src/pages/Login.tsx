@@ -2,21 +2,35 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { signIn } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../stores/authStore';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser, setUserData } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Please enter both email and password');
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
-      toast.success('Logged in successfully!');
-      navigate('/dashboard');
+      const { user } = await signIn(email, password);
+      
+      if (user) {
+        setUser({ id: user.id, email: user.email || '' });
+        toast.success('Logged in successfully!');
+        navigate('/dashboard');
+      } else {
+        throw new Error('Login failed. Please try again.');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Failed to log in');
