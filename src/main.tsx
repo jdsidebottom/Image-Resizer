@@ -5,11 +5,19 @@ import { Toaster } from 'react-hot-toast'
 import App from './App'
 import './index.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-      <Toaster position="top-right" />
-    </BrowserRouter>
-  </React.StrictMode>,
-)
+// Get the root element
+const rootElement = document.getElementById('root');
+
+// Check if the root element exists before rendering
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+        <Toaster position="top-right" />
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+} else {
+  console.error('Root element not found');
+}

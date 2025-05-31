@@ -1,21 +1,28 @@
 import { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { getCurrentUser } from '../../lib/supabase';
+import { useAuthStore } from '../../stores/authStore';
 
 const ProtectedRoute = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, fetchUserData } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { user } = await getCurrentUser();
-      setIsAuthenticated(!!user);
+      try {
+        if (user) {
+          await fetchUserData();
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     checkAuth();
-  }, []);
+  }, [user, fetchUserData]);
 
-  if (isAuthenticated === null) {
-    // Still loading
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
@@ -23,7 +30,7 @@ const ProtectedRoute = () => {
     );
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
+  return user ? <Outlet /> : <Navigate to="/login" />;
 };
 
 export default ProtectedRoute;

@@ -7,9 +7,9 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>({
     full_name: '',
     website: '',
-    avatar_url: '',
+    avatar_url: ''
   });
-  const [subscription, setSubscription] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>({ tier: 'free', monthly_limit: 25 });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -17,23 +17,29 @@ const Profile = () => {
     const fetchUserData = async () => {
       try {
         const { user } = await getCurrentUser();
+        setUser(user);
         
         if (user) {
-          setUser(user);
-          
-          // Fetch profile data
-          const { profile } = await getUserProfile(user.id);
-          if (profile) {
-            setProfile(profile);
+          try {
+            const profileData = await getUserProfile(user.id);
+            if (profileData) {
+              setProfile(profileData);
+            }
+          } catch (error) {
+            console.error('Error fetching profile:', error);
           }
           
-          // Fetch subscription data
-          const { subscription } = await getUserSubscription(user.id);
-          setSubscription(subscription);
+          try {
+            const sub = await getUserSubscription(user.id);
+            if (sub) {
+              setSubscription(sub);
+            }
+          } catch (error) {
+            console.error('Error fetching subscription:', error);
+          }
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        toast.error('Failed to load user data');
+        console.error('Error fetching user:', error);
       } finally {
         setIsLoading(false);
       }
@@ -42,24 +48,23 @@ const Profile = () => {
     fetchUserData();
   }, []);
 
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) return;
+    
     setIsSaving(true);
-
+    
     try {
-      if (!user) return;
-
-      const { data, error } = await updateUserProfile(user.id, {
-        full_name: profile.full_name,
-        website: profile.website,
-        avatar_url: profile.avatar_url,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (error) {
-        throw error;
-      }
-
+      await updateUserProfile(user.id, profile);
       toast.success('Profile updated successfully');
     } catch (error: any) {
       console.error('Error updating profile:', error);
@@ -69,157 +74,173 @@ const Profile = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfile(prev => ({ ...prev, [name]: value }));
-  };
-
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Your Profile</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2">
-          <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Personal Information</h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Email
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="input bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
-                  />
-                </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Your email cannot be changed
-                </p>
-              </div>
-
-              <div>
+    <div>
+      <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Profile</h1>
+      
+      <div className="mt-6 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+        <div className="px-4 py-5 sm:px-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+            Account Information
+          </h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+            Manage your personal details and subscription.
+          </p>
+        </div>
+        
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
+          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Email
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                {user?.email}
+              </dd>
+            </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Subscription Plan
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                {subscription.tier === 'free' ? 'Free Plan' : 'Premium Plan'}
+              </dd>
+            </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Monthly Limit
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                {subscription.monthly_limit} images
+              </dd>
+            </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Account Created
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+              </dd>
+            </div>
+          </dl>
+        </div>
+        
+        {/* Profile form */}
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+            Edit Profile
+          </h3>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+              <div className="sm:col-span-3">
                 <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Full Name
+                  Full name
                 </label>
                 <div className="mt-1">
                   <input
                     type="text"
-                    id="full_name"
                     name="full_name"
+                    id="full_name"
                     value={profile.full_name || ''}
-                    onChange={handleChange}
-                    className="input"
+                    onChange={handleProfileChange}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
               </div>
 
-              <div>
+              <div className="sm:col-span-3">
                 <label htmlFor="website" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Website
                 </label>
                 <div className="mt-1">
                   <input
-                    type="url"
-                    id="website"
+                    type="text"
                     name="website"
+                    id="website"
                     value={profile.website || ''}
-                    onChange={handleChange}
-                    className="input"
-                    placeholder="https://example.com"
+                    onChange={handleProfileChange}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="avatar_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Avatar URL
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="url"
-                    id="avatar_url"
-                    name="avatar_url"
-                    value={profile.avatar_url || ''}
-                    onChange={handleChange}
-                    className="input"
-                    placeholder="https://example.com/avatar.jpg"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end">
+              <div className="sm:col-span-6">
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="btn btn-primary"
+                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-
-        <div className="md:col-span-1">
-          <div className="card">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Subscription</h2>
+        
+        {/* Subscription management */}
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+            Subscription Management
+          </h3>
+          
+          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <h4 className="text-base font-medium text-gray-900 dark:text-white">
+              {subscription.tier === 'free' ? 'Free Plan' : 'Premium Plan'}
+            </h4>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {subscription.tier === 'free' 
+                ? 'You can process up to 25 images per month.' 
+                : 'You have access to all premium features and unlimited image processing.'}
+            </p>
             
-            <div className="flex flex-col items-center">
-              <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center dark:bg-indigo-900">
-                <span className="text-3xl text-indigo-600 dark:text-indigo-400">
-                  {subscription?.plan === 'premium' ? '⭐' : '👤'}
-                </span>
-              </div>
-              
-              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
-                {subscription?.plan === 'premium' ? 'Premium Plan' : 'Free Plan'}
-              </h3>
-              
-              {subscription?.plan === 'premium' ? (
-                <div className="mt-2 text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Renewal date: {new Date(subscription.current_period_end).toLocaleDateString()}
-                  </p>
-                  <a href="#" className="mt-4 inline-block text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
-                    Manage subscription
-                  </a>
-                </div>
+            <div className="mt-4">
+              {subscription.tier === 'free' ? (
+                <a
+                  href="/pricing"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Upgrade to Premium
+                </a>
               ) : (
-                <div className="mt-2 text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Limited to 25 images per month
-                  </p>
-                  <a href="/pricing" className="mt-4 inline-block btn btn-primary">
-                    Upgrade to Premium
-                  </a>
-                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-500"
+                >
+                  Manage Subscription
+                </button>
               )}
             </div>
           </div>
-
-          <div className="mt-6 card">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Account Actions</h2>
+        </div>
+        
+        {/* Account danger zone */}
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:px-6">
+          <h3 className="text-lg leading-6 font-medium text-red-600 dark:text-red-400 mb-4">
+            Danger Zone
+          </h3>
+          
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+            <h4 className="text-base font-medium text-red-800 dark:text-red-400">
+              Delete Account
+            </h4>
+            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+              Once you delete your account, there is no going back. Please be certain.
+            </p>
             
-            <div className="space-y-4">
-              <button className="w-full btn btn-outline">
-                Change Password
-              </button>
-              
-              <button className="w-full btn btn-outline text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300">
+            <div className="mt-4">
+              <button
+                type="button"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
                 Delete Account
               </button>
             </div>
