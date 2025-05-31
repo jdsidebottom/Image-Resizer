@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { getCurrentUser } from './lib/supabase';
+import { useAuthStore } from './stores/authStore';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -17,34 +17,18 @@ import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
 
 // Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { user } = await getCurrentUser();
-        setIsAuthenticated(!!user);
-      } catch (error) {
-        console.error('Auth check error:', error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-};
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
+  const { user, fetchUserData } = useAuthStore();
+
+  // Check authentication status on app load
+  useEffect(() => {
+    if (user) {
+      fetchUserData();
+    }
+  }, [user, fetchUserData]);
+
   return (
     <Routes>
       {/* Public routes */}
@@ -56,14 +40,12 @@ function App() {
       </Route>
 
       {/* Protected routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <DashboardLayout />
-        </ProtectedRoute>
-      }>
-        <Route index element={<Dashboard />} />
-        <Route path="resize" element={<ImageResizer />} />
-        <Route path="profile" element={<Profile />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="resize" element={<ImageResizer />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
       </Route>
 
       {/* 404 route */}

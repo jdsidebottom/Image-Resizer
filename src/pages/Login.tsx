@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signIn } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../stores/authStore';
 
@@ -9,7 +8,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser, setUserData } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,15 +20,16 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const { user } = await signIn(email, password);
+      // Get the auth store instance directly
+      const authStore = useAuthStore.getState();
       
-      if (user) {
-        setUser({ id: user.id, email: user.email || '' });
-        toast.success('Logged in successfully!');
-        navigate('/dashboard');
-      } else {
-        throw new Error('Login failed. Please try again.');
-      }
+      // Call the signIn method from the store
+      await authStore.signIn(email, password);
+      
+      toast.success('Logged in successfully!');
+      
+      // Navigate to dashboard after successful login
+      navigate('/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Failed to log in');

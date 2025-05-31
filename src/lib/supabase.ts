@@ -11,18 +11,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Authentication functions
-export const signUp = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-  
-  if (error) throw error;
-  return { user: data.user, session: data.session };
+export const signIn = async (email: string, password: string) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) throw error;
+    return { user: data.user, session: data.session };
+  } catch (error) {
+    console.error('Sign in error:', error);
+    throw error;
+  }
 };
 
-export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
+export const signUp = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
   });
