@@ -3,34 +3,29 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf node_modules/.vite && rm -rf dist"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "file-saver": "^2.0.5",
-    "framer-motion": "^10.18.0",
-    "jszip": "^3.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-dropzone": "^14.2.3",
+    "react-router-dom": "^6.14.2",
     "react-hot-toast": "^2.4.1",
-    "react-icons": "^4.12.0",
-    "react-router-dom": "^6.18.0",
-    "zustand": "^4.4.6"
+    "@supabase/supabase-js": "^2.31.0",
+    "framer-motion": "^10.12.16",
+    "zustand": "^4.3.8"
   },
   "devDependencies": {
-    "@types/file-saver": "^2.0.7",
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31",
-    "tailwindcss": "^3.3.5",
-    "typescript": "^5.0.2",
     "vite": "^4.4.5",
-    "vite-plugin-pwa": "^0.16.7"
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3"
   }
 }

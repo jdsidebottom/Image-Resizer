@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Initialize Supabase client with fallbacks
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://hfsnqhcysdcoffbzualk.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhmc25xaGN5c2Rjb2ZmYnp1YWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MDU3MzgsImV4cCI6MjA2MzE4MTczOH0.gpXnVO1SsLToNk7amlY-zum9ny-J3vsOanjrjFuzSSo';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables. Check your .env file.');
+  console.error('Missing Supabase environment variables. Using fallback values.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -20,7 +20,7 @@ export const signIn = async (email: string, password: string) => {
     
     if (error) throw error;
     return { user: data.user, session: data.session };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Sign in error:', error);
     throw error;
   }
@@ -35,7 +35,7 @@ export const signUp = async (email: string, password: string) => {
     
     if (error) throw error;
     return { user: data.user, session: data.session };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Sign up error:', error);
     throw error;
   }
@@ -45,7 +45,7 @@ export const signOut = async () => {
   try {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Sign out error:', error);
     throw error;
   }
@@ -57,7 +57,7 @@ export const getCurrentUser = async () => {
     
     if (error) throw error;
     return { user: data.user };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get current user error:', error);
     throw error;
   }
@@ -67,7 +67,7 @@ export const resetPassword = async (email: string) => {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) throw error;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Reset password error:', error);
     throw error;
   }
@@ -83,7 +83,7 @@ export const updateUserProfile = async (userId: string, updates: any) => {
     
     if (error) throw error;
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update user profile error:', error);
     throw error;
   }
@@ -99,7 +99,7 @@ export const getUserProfile = async (userId: string) => {
     
     if (error) throw error;
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get user profile error:', error);
     throw error;
   }
@@ -116,7 +116,7 @@ export const saveImageProcessingHistory = async (userId: string, details: any) =
     
     if (error) throw error;
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Save image processing history error:', error);
     throw error;
   }
@@ -132,7 +132,7 @@ export const getUserImageHistory = async (userId: string) => {
     
     if (error) throw error;
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get user image history error:', error);
     throw error;
   }
@@ -160,7 +160,7 @@ export const getUserSubscription = async (userId: string) => {
     }
     
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get user subscription error:', error);
     throw error;
   }
@@ -185,7 +185,7 @@ export const getProcessedImagesCount = async (userId: string, period: 'month' | 
     
     if (error) throw error;
     return count || 0;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get processed images count error:', error);
     throw error;
   }
